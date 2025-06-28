@@ -3,4 +3,3 @@ directory = "netlify/functions/"
 
 [build]
 publish = "dist"
-command = "npm run build"

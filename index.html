@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project: Sovereign Cell</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .card { background-color: rgba(31, 41, 55, 0.8); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .prose-output h3 { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.75rem; color: #5eead4; }
+        .prose-output h4 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.75rem; color: #f3f4f6; }
+        .prose-output p { margin-bottom: 1rem; }
+        .prose-output ul { list-style-type: none; padding-left: 0; margin-bottom: 1rem; }
+        .prose-output li { background-color: rgba(255, 255, 255, 0.05); padding: 1rem; margin-bottom: 0.75rem; border-left: 4px solid #14b8a6; border-radius: 0.375rem; }
+        .prose-output strong { color: #f3f4f6; }
+        .halal-tag { display: inline-block; background-color: #14b8a6; color: white; padding: 0.125rem 0.5rem; font-size: 0.75rem; font-weight: 600; border-radius: 9999px; margin-left: 0.5rem; vertical-align: middle; }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200">
+
+    <div class="min-h-screen bg-cover bg-fixed" style="background-image: url('https://placehold.co/1920x1080/000000/FFF?text=.')">
+        <div class="container mx-auto px-4 py-8 md:py-16">
+            
+            <header class="text-center mb-12">
+                <h1 class="text-4xl md:text-6xl font-black uppercase tracking-wider text-white">Project: Sovereign Cell</h1>
+                <p class="mt-4 text-lg md:text-xl text-gray-400 max-w-3xl mx-auto">This isn't an app. It's an escape route. Reclaim your food. Rebuild your community.</p>
+            </header>
+
+            <div class="max-w-xl mx-auto mb-12">
+                <div class="card rounded-lg p-6 shadow-2xl">
+                    <label for="postcode" class="block text-sm font-medium text-gray-300 mb-2">Enter Your UK Postcode. Find Your Cell.</label>
+                    <div class="flex flex-col sm:flex-row gap-4 mb-4">
+                        <input type="text" id="postcode" placeholder="e.g., BL9 0MB" class="w-full bg-gray-900 text-white border border-gray-600 rounded-md px-4 py-3 focus:outline-none focus:ring-2 focus:ring-teal-500 transition duration-300">
+                        <button id="findCellBtn" class="w-full sm:w-auto bg-teal-600 hover:bg-teal-500 text-white font-bold py-3 px-6 rounded-md transition duration-300 whitespace-nowrap">Activate Cell</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input id="halalToggle" type="checkbox" class="h-4 w-4 rounded border-gray-500 bg-gray-700 text-teal-600 focus:ring-teal-500">
+                        <label for="halalToggle" class="ml-2 block text-sm text-gray-300">Highlight Halal Options</label>
+                    </div>
+                </div>
+            </div>
+
+            <div id="loading" class="hidden text-center my-8">
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500"></div>
+                <p class="mt-4 text-gray-400">Accessing local intelligence... Stand by.</p>
+            </div>
+
+            <div id="results" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
+                <div class="space-y-8">
+                    <div class="card rounded-lg p-6 shadow-xl"><h2 class="text-2xl font-bold text-white mb-4">Sovereign Supply Map</h2><p class="text-gray-400 mb-4">Primary producers and trusted vendors in your operational theater.</p><div id="suppliers-content" class="prose-output text-gray-300"></div></div>
+                    <div class="card rounded-lg p-6 shadow-xl"><h2 class="text-2xl font-bold text-white mb-4">The Harvest Plan</h2><p class="text-gray-400 mb-4">An actionable 3-day meal plan based on what's available *now*.</p><div id="harvest-content" class="prose-output text-gray-300"></div></div>
+                </div>
+                <div class="card rounded-lg p-6 shadow-xl flex flex-col h-full">
+                    <h2 class="text-2xl font-bold text-teal-400 mb-4">The Cell Connector</h2><p class="text-gray-400 mb-4">Intelligence and plans are worthless without a network.</p><div class="flex-grow p-6 bg-gray-900/50 rounded-lg border border-gray-700"><p class="font-semibold text-white">For £5/month, join your local secure cell:</p><ul class="list-disc list-inside mt-4 space-y-2 text-gray-300"><li>Coordinate bulk buys directly from farms.</li><li>Swap surplus harvests with neighbours.</li><li>Share skills and build real-world resilience.</li></ul></div><button class="w-full bg-red-700 hover:bg-red-600 text-white font-bold py-4 px-6 rounded-md mt-6 transition duration-300 text-lg">Join Your Cell (Coming Soon)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const findCellBtn = document.getElementById('findCellBtn');
+        const postcodeEl = document.getElementById('postcode');
+        const halalToggleEl = document.getElementById('halalToggle');
+        const loadingEl = document.getElementById('loading');
+        const resultsEl = document.getElementById('results');
+        const suppliersContentEl = document.getElementById('suppliers-content');
+        const harvestContentEl = document.getElementById('harvest-content');
+
+        // --- DEMO DATA ---
+        // This is the sample data that will be shown.
+        const demoSuppliers = `
+* **Bury Market**
+**Type:** Market Stalls / Greengrocers
+**Intel:** Primary local hub for diverse food supplies. High density of vendors reduces single-point failure risk.
+**Location:** Market Hall / Open Market, Bury Town Centre
+
+* **Ghausia Halal Meat Centre [HALAL]**
+**Type:** Butcher
+**Intel:** Established specialist supplier of Halal meats. Represents a critical node for specific dietary requirements.
+**Location:** Alfred Street, Bury
+
+* **Hough Hey Farm Shop**
+**Type:** Farm Shop
+**Intel:** Offers produce potentially sourced directly from the farm, indicating lower food miles and supply chain resilience.
+**Location:** Hough Hey Lane, Ramsbottom
+
+* **Yates Original Bakehouse**
+**Type:** Bakery
+**Intel:** Long-established local bakery chain. Reliable supplier of essential baked goods (bread, rolls, pies).
+**Location:** The Rock, Bury
+        `;
+        
+        const demoHarvestPlan = `
+### Day 1: Initial Fuel Ingestion
+**Breakfast:** Scrambled free-range eggs (from local farms) cooked in butter or olive oil. Serve with grilled Halal lamb sausages.
+**Lunch:** Cold sliced leftover Halal lamb or pre-cooked Halal chicken breast. Pair with a robust salad of mixed local leaves.
+**Dinner:** Pan-seared Halal chicken breast. Serve with steamed broad beans and peas and boiled new potatoes.
+
+### Day 2: Sustained Energy Protocol
+**Breakfast:** Full-fat Greek style yogurt topped with a handful of fresh UK berries.
+**Lunch:** Hearty lentil soup (ensure no non-Halal meat/broth used).
+**Dinner:** Halal lamb and vegetable skewers. Marinate cubed Halal lamb leg with olive oil and herbs.
+
+### Day 3: Peak Performance Fuel
+**Breakfast:** Porridge made with whole oats and milk or water. Top with sliced banana and a drizzle of local honey.
+**Lunch:** Leftover Halal lamb and vegetable skewers from Day 2.
+**Dinner:** Roasted Halal chicken portions with root vegetables roasted in olive oil.
+        `;
+        // --- END DEMO DATA ---
+
+
+        findCellBtn.addEventListener('click', () => {
+            const postcode = postcodeEl.value.trim();
+            if (!postcode) {
+                alert('A postcode is required for intelligence gathering.');
+                return;
+            }
+            
+            resultsEl.classList.add('hidden');
+            loadingEl.classList.remove('hidden');
+            
+            // Simulate a network delay
+            setTimeout(() => {
+                suppliersContentEl.innerHTML = '';
+                harvestContentEl.innerHTML = '';
+                
+                renderMarkdown(suppliersContentEl, demoSuppliers);
+                renderMarkdown(harvestContentEl, demoHarvestPlan);
+
+                loadingEl.classList.add('hidden');
+                resultsEl.classList.remove('hidden');
+            }, 1500); // Wait 1.5 seconds
+        });
+        
+        function renderMarkdown(element, text) {
+            text = text.replace(/\[HALAL\]/g, '<span class="halal-tag">HALAL</span>');
+            const lines = text.split('\n');
+            let html = '';
+            let inList = false;
+            for (const line of lines) {
+                const trimmedLine = line.trim();
+                if (/^### /.test(trimmedLine)) {
+                    if (inList) { html += '</ul>'; inList = false; }
+                    html += `<h4>${trimmedLine.substring(4)}</h4>`;
+                    continue;
+                }
+                if (trimmedLine.startsWith('* ')) {
+                    if (!inList) { html += '<ul>'; inList = true; } else { html += '</li>'; }
+                    html += `<li>${trimmedLine.substring(2).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}`;
+                } else if (inList && trimmedLine) {
+                    html += `<br>${trimmedLine.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}`;
+                } else if (trimmedLine) {
+                    if (inList) { html += '</li></ul>'; inList = false; }
+                    html += `<p>${trimmedLine.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</p>`;
+                }
+            }
+            if (inList) { html += '</li></ul>'; }
+            element.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
